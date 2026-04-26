@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - FaceID{% endblock %}
+{% block content %}
+<header>
+    <h1>Welcome to FaceID</h1>
+    <p class="subtext">Real-time biometric attendance monitoring system.</p>
+</header>
+
+<div class="cards-row">
+    <!-- Today's Check-ins -->
+    <div class="metric-card">
+        <div class="metric-title">TODAY'S CHECK-INS</div>
+        <div class="metric-value">{{ todays_checkins }}</div>
+    </div>
+    
+    <!-- System Status -->
+    <div class="metric-card">
+        <div class="metric-title">SYSTEM STATUS</div>
+        <div class="status-active">
+            <i class="fa-solid fa-circle-check"></i> Active & Listening
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="metric-card" style="justify-content: center;">
+        <div class="metric-title">QUICK ACTIONS</div>
+        <a href="/attendance" class="btn-primary">
+            <i class="fa-solid fa-play"></i> Start Camera
+        </a>
+        <a href="/register" class="btn-dark">
+            <i class="fa-solid fa-user-plus"></i> New User
+        </a>
+    </div>
+</div>
+
+<h2>Recent Activity</h2>
+{% if data %}
+<div style="background-color: #1A1D24; border-radius: 8px; border: 1px solid var(--border-color); overflow: hidden;">
+    <table>
+        <thead>
+            <tr>
+                <th>USER NAME</th>
+                <th>TIME</th>
+                <th>DATE</th>
+                <th>STATUS</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in data %}
+            <tr>
+                <!-- Assumes row format: Name, Time, Date, Period, Status -->
+                <td style="font-weight: 500;">{{ row[0] }}</td>
+                <td style="color: var(--text-secondary);">{{ row[1] }}</td>
+                <td style="color: var(--text-secondary);">{{ row[2] }}</td>
+                <td><span class="status-{{ row[4] }}">{{ row[4] }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div style="background-color: #1A1D24; border-radius: 8px; border: 1px solid var(--border-color); padding: 2rem; text-align: center;">
+    <p style="color: var(--text-secondary); margin: 0; font-size: 0.95rem; font-weight: 500;">No attendance records for today.</p>
+</div>
+{% endif %}
+{% endblock %}

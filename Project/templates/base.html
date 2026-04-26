@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FaceID{% endblock %}</title>
+    <!-- Use FontAwesome for icons matching FaceID UI -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <nav>
+        <!-- The bold logo -->
+        <a href="/" class="nav-logo">FaceID</a>
+        
+        <!-- Navigation links with active check matching FaceID layout -->
+        {% set path = request.path %}
+        <a href="/" class="{{ 'active' if path == '/' else '' }}">Dashboard</a>
+        <a href="/attendance" class="{{ 'active' if path == '/attendance' else '' }}">Live Check-in</a>
+        <a href="/register" class="{{ 'active' if path == '/register' else '' }}">Register</a>
+        <a href="/manage" class="{{ 'active' if path == '/manage' else '' }}">Database</a>
+        
+        {% if session.logged_in %}
+        <a href="/logout" class="btn-logout"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
+        {% endif %}
+    </nav>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

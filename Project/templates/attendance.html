@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Attendance Station{% endblock %}
+{% block content %}
+<div class="dashboard-grid glass-container" style="text-align: center;">
+    <h2>Attendance Station</h2>
+    <p style="margin-bottom: 20px; color: var(--text-secondary);">Please look at the camera to check into your shift.</p>
+    
+    <div class="video-container">
+        <!-- Render MJPEG stream from Flask app -->
+        <img src="/video_feed" alt="Video Stream">
+    </div>
+</div>
+
+<div id="toast-container"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Audio Context Synthesis for Sounds
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+    
+    function playSound(type) {
+        if (!audioCtx) audioCtx = new AudioContext();
+        
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.connect(g);
+        g.connect(audioCtx.destination);
+        
+        if (type === "success") {
+            o.type = "sine";
+            o.frequency.setValueAtTime(440, audioCtx.currentTime);
+            o.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.1);
+            g.gain.setValueAtTime(0, audioCtx.currentTime);
+            g.gain.linearRampToValueAtTime(1, audioCtx.currentTime + 0.05);
+            g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+            o.start(audioCtx.currentTime);
+            o.stop(audioCtx.currentTime + 0.5);
+        } else if (type === "error") {
+            o.type = "sawtooth";
+            o.frequency.setValueAtTime(150, audioCtx.currentTime);
+            o.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+            g.gain.setValueAtTime(0, audioCtx.currentTime);
+            g.gain.linearRampToValueAtTime(1, audioCtx.currentTime + 0.1);
+            g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+            o.start(audioCtx.currentTime);
+            o.stop(audioCtx.currentTime + 0.3);
+        }
+    }
+
+    function showToast(message, type) {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerText = message;
+        
+        container.appendChild(toast);
+        
+        setTimeout(() => toast.classList.add('show'), 10); // give reflow
+        
+        // play sound
+        playSound(type);
+        
+        // Remove toast
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 400); // transition takes 400ms
+        }, 4000);
+    }
+
+    // Polling API for attendance events
+    setInterval(() => {
+        fetch('/api/poll')
+            .then(res => res.json())
+            .then(event => {
+                if (event && event.name) {
+                    if (event.status === "OUT_OF_HOURS") {
+                        showToast(`Access Denied: ${event.name} is OUT_OF_HOURS!`, "error");
+                    } else if (event.status === "NEW") {
+                        showToast(`Success: ${event.name} checked into Period ${event.period}!`, "success");
+                    }
+                }
+            })
+            .catch(e => console.error("Poll error:", e));
+    }, 1000);
+</script>
+{% endblock %}

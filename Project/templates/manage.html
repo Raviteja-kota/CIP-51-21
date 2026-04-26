@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Vault{% endblock %}
+{% block content %}
+<div class="dashboard-grid glass-container">
+    <h2>Vault</h2>
+    <p>Double-layered security zone. Images are encrypted using a visual blur.</p>
+    
+    <div class="vault-content" id="vaultContent">
+        <div class="vault-overlay" id="vaultOverlay">
+            <div style="text-align: center; background: rgba(0,0,0,0.5); padding: 2rem; border-radius: 15px; border: 1px solid var(--glass-border);">
+                <h3 style="margin-bottom: 15px;">Secure Vault</h3>
+                <input type="password" id="vaultPasscode" placeholder="Enter Passcode..." style="width: 200px; text-align: center;">
+                <br>
+                <button id="unlockBtn" style="width: 200px; margin-top: 10px;">Unlock Vault</button>
+            </div>
+        </div>
+        
+        <div class="faces-grid" style="filter: blur(20px);" id="facesGrid">
+            {% for face in faces %}
+            <div class="face-card">
+                <img src="{{ url_for('static', filename='../faces/' + face.file) }}" alt="{{ face.name }}">
+                <h3>{{ face.name }}</h3>
+                <p>Shift Start: {{ face.start }}</p>
+            </div>
+            {% else %}
+            <p style="text-align: center; color: white;">No registered users.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.getElementById('unlockBtn').addEventListener('click', () => {
+        const pass = document.getElementById('vaultPasscode').value;
+        if (pass === "vault") {
+            document.getElementById('facesGrid').style.filter = "none";
+            document.getElementById('vaultOverlay').style.display = "none";
+            alert("Vault unlocked successfully.");
+        } else {
+            alert("Invalid Vault Passcode.");
+            document.getElementById('vaultPasscode').value = '';
+        }
+    });
+</script>
+{% endblock %}

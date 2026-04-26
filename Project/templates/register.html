@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Register{% endblock %}
+{% block content %}
+<div class="center-box glass-container">
+    <h2 style="text-align: center;">Register Student</h2>
+    
+    <div id="registerForm">
+        <label for="name">Student Name</label>
+        <input type="text" id="name" placeholder="Teja" required>
+        
+        <label for="start_time">Shift Start Time (8-Hour Shift Default)</label>
+        <input type="time" id="start_time" value="09:00" required>
+        
+        <video id="video" width="100%" autoplay style="border-radius: 10px; margin-bottom: 20px;"></video>
+        <canvas id="canvas" style="display:none;"></canvas>
+        
+        <button id="captureBtn">Register and Capture Face</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const captureBtn = document.getElementById('captureBtn');
+
+    // Access webcam
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => { video.srcObject = stream; })
+        .catch(err => {
+            console.error("Error accessing webcam:", err);
+            alert("Could not access webcam.");
+        });
+
+    captureBtn.addEventListener('click', async () => {
+        const name = document.getElementById('name').value;
+        const startTime = document.getElementById('start_time').value;
+
+        if (!name) {
+            alert("Please enter a name.");
+            return;
+        }
+
+        const images = [];
+        const burstCount = 10;
+        
+        captureBtn.disabled = true;
+        
+        // Burst Capture Loop
+        for (let i = 1; i <= burstCount; i++) {
+            captureBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Scanning: ${i}/${burstCount}`;
+            
+            // Draw image to canvas
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            images.push(canvas.toDataURL('image/jpeg', 0.8));
+            
+            // Small delay between captures
+            await new Promise(resolve => setTimeout(resolve, 150));
+        }
+
+        captureBtn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Processing...`;
+
+        fetch('/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: name,
+                start_time: startTime,
+                images: images
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                alert(`Successfully registered ${name}!`);
+                document.getElementById('name').value = '';
+            } else {
+                alert(`Error: ${data.error}`);
+            }
+        })
+        .catch(err => {
+            alert("Network error.");
+        })
+        .finally(() => {
+            captureBtn.innerHTML = `Register and Capture Face`;
+            captureBtn.disabled = false;
+        });
+    });
+</script>
+{% endblock %}
